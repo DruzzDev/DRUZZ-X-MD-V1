@@ -22,21 +22,21 @@ async function groupInfoCommand(sock, chatId, msg) {
         }
 
         const text = `
-*╭━━━ ɪɴғᴏ ɢʀᴏᴜᴘ ━━━*
-*║德 ♻️ ɪᴅ:*
-*║德 ${groupMetadata.id}*
-*║德 🔖 ɴᴀᴍᴇ:* 
-*║德 ${groupMetadata.subject}*
-*║德 👥 ᴍᴇᴍʙᴇʀs:*
-*║德 ${participants.length}*
-*║德 🤿ɢʀᴏᴜᴘ ᴏᴡɴᴇʀ:*
-*║德 ${ownerDisplay}*
-*║德 🕵🏻‍♂️ᴀᴅᴍɪɴs:*
-*║德 ${listAdmin}*
-*║德
-*║德 📌 ᴅᴇsᴄʀɪᴘᴛɪᴏɴ:*
-*║德 ${groupMetadata.desc?.toString() || 'ɴᴏ ᴅᴇsᴄʀɪᴘᴛɪᴏɴ'}*
-*╰━━━━━━━━━━━━━━━*
+╭━━━ ɪɴғᴏ ɢʀᴏᴜᴘ ━━━
+║德 *♻️ ɪᴅ:*
+║德 ${groupMetadata.id}
+║德 *🔖 ɢʀᴏᴜᴘ ɴᴀᴍᴇ:* 
+║德 ${groupMetadata.subject}
+║德 *👥 ᴍᴇᴍʙᴇʀs:*
+║德 ${participants.length}
+║德 *🤿ɢʀᴏᴜᴘ ᴏᴡɴᴇʀ:*
+║德 ${ownerDisplay}
+║德 *🕵🏻‍♂️ᴀᴅᴍɪɴs:*
+║德 ${listAdmin}
+║德
+║德 *📌 ᴅᴇsᴄʀɪᴘᴛɪᴏɴ:*
+║德 *${groupMetadata.desc?.toString() || 'ɴᴏ ᴅᴇsᴄʀɪᴘᴛɪᴏɴ'}*
+╰━━━━━━━━━━━━━━━
 `.trim();
 
         const mentions = groupAdmins.map(v => v.id);
