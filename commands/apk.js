@@ -74,10 +74,10 @@ async function apkCommand(sock, chatId, message) {
 
     // Format message with details
     const details = `📦 *ᴀᴘᴋ ᴅᴇᴛᴀɪʟs* 📦\n\n` +
-      `🔖 *ɴᴀᴍᴇ*: ${name}\n` +
-      `📅 *ʟᴀsᴛ ᴜᴘᴅᴀᴛᴇ*: ${lastup}\n` +
-      `📦 *ᴘᴀᴄᴋᴀɢᴇ*: ${package}\n` +
-      `📏 *sɪᴢᴇ*: ${size}\n\n` +
+      `*┃🔖 ɴᴀᴍᴇ*: ${name}\n` +
+      `*┃📅 ʟᴀsᴛ ᴜᴘᴅᴀᴛᴇ*: ${lastup}\n` +
+      `*┃📦 ᴘᴀᴄᴋᴀɢᴇ*: ${package}\n` +
+      `*┃📏 sɪᴢᴇ*: ${size}\n\n` +
       `> *©ᴍᴀᴋᴇ ʙʏ ᴅʀᴜᴢᴢ x-ᴍᴅ*`;
 
     // Send APK as document

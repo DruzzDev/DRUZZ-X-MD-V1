@@ -47,9 +47,13 @@
     .prefix{padding:0 0 0 14px;color:#8f99b1;font-size:14px}
     input{width:100%;padding:15px 14px;border:0;outline:0;background:transparent;color:#fff;font-size:15px}
     input::placeholder{color:#59637a}
-    .btn{width:100%;border:0;border-radius:15px;margin-top:13px;padding:14px 16px;color:#fff;font-weight:800;
-      cursor:pointer;background:linear-gradient(100deg,#7456ff,#258cff);box-shadow:0 10px 30px rgba(74,75,255,.2);
-      transition:transform .15s,opacity .15s}
+    .btn{position:relative;overflow:hidden;width:100%;border:1px solid rgba(255,255,255,.16);border-radius:15px;margin-top:13px;padding:15px 16px;color:#fff;font-weight:850;
+      cursor:pointer;background:linear-gradient(110deg,#6d4aff 0%,#9b5cff 38%,#16bfff 100%);box-shadow:0 12px 34px rgba(93,74,255,.30),inset 0 1px 0 rgba(255,255,255,.24);
+      transition:transform .18s,opacity .18s,box-shadow .18s;isolation:isolate}
+    .btn::before{content:"";position:absolute;inset:-80% -20%;background:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.34) 50%,transparent 65%);transform:translateX(-75%) rotate(10deg);animation:shine 3.2s ease-in-out infinite;z-index:-1}
+    .btn::after{content:"";position:absolute;inset:1px;border-radius:14px;border:1px solid rgba(255,255,255,.08);pointer-events:none}
+    @keyframes shine{0%,45%{transform:translateX(-80%) rotate(10deg)}70%,100%{transform:translateX(80%) rotate(10deg)}}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 16px 42px rgba(93,74,255,.40),0 0 28px rgba(38,199,255,.13),inset 0 1px 0 rgba(255,255,255,.28)}
     .btn:active{transform:scale(.985)}.btn:disabled{opacity:.55;cursor:not-allowed}
     .btn.secondary{background:#171d2e;box-shadow:none;border:1px solid var(--line)}
     .result{display:none;margin-top:18px;padding:18px;border-radius:17px;background:#080c17;border:1px solid var(--line)}
@@ -100,7 +104,7 @@
         <span class="prefix">+</span>
         <input id="phone" inputmode="numeric" autocomplete="tel" maxlength="15" placeholder="509 xxx xxx">
       </div>
-      <button id="pairBtn" class="btn">Generate Pairing Code</button>
+      <button id="pairBtn" class="btn">⚡ Generate Pairing Code</button>
 
       <div id="result" class="result">
         <div class="result-title">YOUR PAIRING CODE</div>
@@ -189,7 +193,7 @@
       }
       currentUser = n;
       pairBtn.disabled = true;
-      pairBtn.textContent = 'Generating…';
+      pairBtn.innerHTML = '⏳ Generating Pairing Code…';
       setMessage('Connecting to the pairing service…');
       result.classList.remove('show');
       socket.emit('set-user', n);
@@ -200,13 +204,13 @@
       codeEl.textContent = code || '----';
       result.classList.add('show');
       pairBtn.disabled = false;
-      pairBtn.textContent = 'Generate Pairing Code';
+      pairBtn.innerHTML = '⚡ Generate Pairing Code';
       setMessage('Pairing code generated. Enter it in WhatsApp.', 'ok');
     });
 
     socket.on('pairing-error', err => {
       pairBtn.disabled = false;
-      pairBtn.textContent = 'Generate Pairing Code';
+      pairBtn.innerHTML = '⚡ Generate Pairing Code';
       setMessage(String(err || 'Pairing failed. Try again.'), 'error');
     });
 
@@ -218,12 +222,12 @@
         statusText.textContent = 'Connected';
         setMessage('WhatsApp is connected to DRUZZ X-MD.', 'ok');
         pairBtn.disabled = true;
-        pairBtn.textContent = 'Already Connected';
+        pairBtn.innerHTML = '✓ Already Connected';
       } else {
         dot.classList.remove('live');
         statusText.textContent = 'Ready';
         pairBtn.disabled = false;
-        pairBtn.textContent = 'Generate Pairing Code';
+        pairBtn.innerHTML = '⚡ Generate Pairing Code';
       }
     });
 

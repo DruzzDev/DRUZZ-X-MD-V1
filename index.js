@@ -48,7 +48,14 @@ const commands = {
     hack: require('./commands/hack'),
     accept: require('./commands/accept'),
     kickoffline: require('./commands/kickoffline'),
-    antistatus: require('./commands/antistatus')
+    antistatus: require('./commands/antistatus'),
+    delete: require('./commands/delete'),
+    kickall: require('./commands/kickall'),
+    mute: require('./commands/mute'),
+    unmute: require('./commands/unmute'),
+    welcome: require('./commands/welcome'),
+    goodbye: require('./commands/goodbye'),
+    fun: require('./commands/fun')
 };
 
 const { handleAutoread } = require('./commands/autoread');
@@ -64,13 +71,17 @@ const io = socketIo(server, {
 });
 
 let openai = null;
-if (process.env.OPENAI_API_KEY) {
+const AI_API_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY;
+const AI_BASE_URL = process.env.AI_BASE_URL || (process.env.OPENROUTER_API_KEY ? 'https://openrouter.ai/api/v1' : 'https://api.openai.com/v1');
+if (AI_API_KEY) {
     try {
         openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
-            baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1"
+            apiKey: AI_API_KEY,
+            baseURL: AI_BASE_URL
         });
-    } catch (e) {}
+    } catch (e) {
+        console.error('❌ AI client initialization failed:', e.message);
+    }
 }
 
 app.use(express.json());
@@ -95,10 +106,20 @@ const DATA_FILE = './data/bot_data.json';
 fs.ensureDirSync(AUTH_DIR);
 fs.ensureDirSync('./data');
 
-let botData = { antilinkGroups: {}, totalBots: 0, registeredBots: [], statusSettings: {}, antiDelete: {}, userNames: {}, antiCall: {} };
+let botData = { antilinkGroups: {}, totalBots: 0, registeredBots: [], statusSettings: {}, antiDelete: {}, userNames: {}, antiCall: {}, welcomeGroups: {}, goodbyeGroups: {}, mutedGroups: {} };
 if (fs.existsSync(DATA_FILE)) {
     try { botData = fs.readJsonSync(DATA_FILE); } catch (e) {}
 }
+
+// Backward-compatible defaults for existing bot data.
+botData.antilinkGroups ||= {};
+botData.statusSettings ||= {};
+botData.antiDelete ||= {};
+botData.userNames ||= {};
+botData.antiCall ||= {};
+botData.welcomeGroups ||= {};
+botData.goodbyeGroups ||= {};
+botData.mutedGroups ||= {};
 
 function saveBotData() {
     fs.writeJsonSync(DATA_FILE, botData);
@@ -148,17 +169,17 @@ const toBold = (text) => {
 
 const STYLISH = {
     connected: 
-        "╔══════════════════════════╗\n" +
-        "║               𝗗𝗥𝗨𝗭𝗭 𝗫-𝗠𝗗.           ║\n" +
-        "╚══════════════════════════╝\n\n" +
-        "𒑡 𝗖𝗢𝗡𝗡𝗘𝗖𝗧𝗘𝗗\n" +
-        "𒑡 𝗦𝗨𝗖𝗖𝗘𝗦𝗦𝗙𝗨𝗟𝗟𝗬\n\n" +
-        "𒑡 𝗕𝗢𝗧 𝗦𝗧𝗔𝗧𝗨𝗦   ➜  𝗢𝗡𝗟𝗜𝗡𝗘\n" +
-        "𒑡 𝗦𝗬𝗦𝗧𝗘𝗠       ➜  𝗔𝗖𝗧𝗜𝗩𝗔𝗧𝗘𝗗\n" +
-        "𒑡 𝗦𝗘𝗥𝗩𝗘𝗥      ➜  𝗥𝗨𝗡𝗡𝗜𝗡𝗚\n" +
-        "𒑡 𝗠𝗢𝗗𝗨𝗟𝗘𝗦     ➜  𝗔𝗖𝗧𝗜𝗩𝗘\n\n" +
-        "𒑡 𝗧𝘆𝗽𝗲 .𝗺𝗲𝗻𝘂 𝘁𝗼 𝘃𝗶𝗲𝘄 𝗮𝗹𝗹 𝗰𝗼𝗺𝗺𝗮𝗻𝗱𝘀\n\n" +
-        "𒑡 ©𝗠𝗔𝗞𝗘 𝗕𝗬 𝗗𝗥𝗨𝗭𝗭",
+        "╔═════════════════════╗\n" +
+        "║       𝗗𝗥𝗨𝗭𝗭 𝗫-𝗠𝗗       ║\n" +
+        "╚═════════════════════╝\n\n" +
+        "*德 𝙲𝙾𝙽𝙽𝙴𝙲𝚃𝙴𝙳*\n" +
+        "*德 𝚂𝚄𝙲𝙲𝙴𝚂𝚂𝙵𝚄𝙻𝙻𝚈*\n\n" +
+        "*德 𝙱𝙾𝚃 𝚂𝚃𝙰𝚃𝚄𝚂   ➜  ONLINE*\n" +
+        "*德 𝚂𝚈𝚂𝚃𝙴𝙼       ➜  ACTIVATED*\n" +
+        "*德 𝚂𝙴𝚁𝚅𝙴𝚁      ➜  RUNNING*\n" +
+        "*德 𝙼𝙾𝙳𝚄𝙻𝙴𝚂    ➜  ACTIVE*\n\n" +
+        "*德 𝚃𝚈𝙿𝙴 `.𝙼𝙴𝙽𝚄` 𝚃𝙾 𝚅𝙸𝙴𝚆 𝙰𝙻𝙻 𝙲𝙾𝙼𝙼𝙰𝙽𝙳𝚂*\n\n" +
+        "*德 ©𝙼𝙰𝙺𝙴 𝙱𝚈 𝙳𝚁𝚄𝚉𝚉",
 
     disconnected:
         "╔══════════════════════════╗\n" +
@@ -250,10 +271,10 @@ class BotSession {
     }
 
     async getAIResponse(userJid, userMessage) {
-        if (!openai) return "❌ AI is not configured.";
+        if (!openai) return "❌ AI is not configured. Add AI_API_KEY (or OPENAI_API_KEY) to Railway Variables, then redeploy.";
         try {
             const completion = await openai.chat.completions.create({
-                model: process.env.AI_MODEL || "gpt-3.5-turbo",
+                model: process.env.AI_MODEL || (process.env.OPENROUTER_API_KEY ? 'openai/gpt-4o-mini' : 'gpt-4o-mini'),
                 messages: [{ role: "system", content: "Helpful assistant." }, { role: "user", content: userMessage }],
                 max_tokens: 150
             });
@@ -366,6 +387,26 @@ class BotSession {
                             } catch (e) {}
                         }
                     }
+                }
+            });
+
+            // Welcome / goodbye automation.
+            this.sock.ev.on('group-participants.update', async (update) => {
+                try {
+                    const { id, participants, action } = update;
+                    if (!id || !Array.isArray(participants) || !participants.length) return;
+                    const enabled = action === 'add' ? botData.welcomeGroups[id] : action === 'remove' ? botData.goodbyeGroups[id] : false;
+                    if (!enabled) return;
+
+                    const mentions = participants;
+                    const names = participants.map(jid => '@' + jid.split('@')[0]).join(', ');
+                    const title = action === 'add' ? '👋 𝗪𝗘𝗟𝗖𝗢𝗠𝗘' : '👋 𝗚𝗢𝗢𝗗𝗕𝗬𝗘';
+                    const body = action === 'add'
+                        ? `*ᴡᴇʟᴄᴏᴍᴇ ${names}! 🎉*\\n\\n*ʏᴏᴜ ᴀʀᴇ ɴᴏᴡ ᴘᴀʀᴛ ᴏғ ᴛʜᴇ ɢʀᴏᴜᴘ. ᴇɴᴊᴏʏ ʏᴏᴜʀ sᴛᴀʏ!*`
+                        : `*ɢᴏᴏᴅʙʏᴇ ${names}! 👋*\\n\\n*ᴛʜᴀɴᴋs ғᴏʀ ʙᴇɪɴɢ ᴘᴀʀᴛ ᴏғ ᴛʜᴇ ɢʀᴏᴜᴘ.*`;
+                    await this.sock.sendMessage(id, { text: `╭━━━〔 ${title} 〕━━━╮\\n┃\\n┃ ${body.replace(/\\n/g, '\\n┃ ')}\\n┃\\n╰━━━━━━━━━━━━━━━━━━╯`, mentions });
+                } catch (e) {
+                    this.sendLog('⚠️ Welcome/goodbye handler: ' + e.message, 'warning');
                 }
             });
 
@@ -501,7 +542,7 @@ class BotSession {
                                             for (const emoji of loadEmojis) await this.sock.sendMessage(from, { react: { text: emoji, key: msg.key } });
                                             const customName = botData.userNames[this.userId] || msg.pushName || 'User';
                                             const menuText = `> *┏━━━━━━━━━━━━━━━━━━┓*
-> *┃       𝗗𝗥𝗨𝗭𝗭 𝗫-𝗠𝗗       ┃*
+> *┃       𝗗𝗥𝗨𝗭𝗭 𝗫-𝗠𝗗
 > *┗━━━━━━━━━━━━━━━━━━┛*
 
 > *╭━━━━⊷ 𝙸𝙽𝙵𝙾 𝙱𝙾𝚃 ⊷━━━━*
@@ -510,13 +551,14 @@ class BotSession {
 > *║德┃ 𝚂𝚃𝙰𝚃𝚄𝚂 : Online*
 > *║德┃ 𝙿𝚁𝙴𝙵𝙸𝚇 : "."*
 > *║德┃ 𝙼𝙾𝙳𝙴 :  ${this.isPublic ? 'PUBLIC 🌍' : 'PRIVATE 🔒'}*
+> *║德┃https://druzz-x-md-v1.up.railway.app/*
 > *║德╰───────────────*
 > *╰━━━━━━━━━━━━━━━━━━*
 
          *𝚄𝚂𝙴𝚁 𝙲𝙾𝙼𝙼𝙰𝙽𝙳𝚂*
 > *╭━━━━━━━━━━━━━━━━━━*
 > *┃德╭───────────────*
-> *┃德┃𝙰𝚄𝚃𝙾𝚁𝙴𝙰𝙲𝚃*
+> *┃德┃𝙰𝚄𝚃𝙾𝚁𝙴𝙰𝙲𝚃𝚂*
 > *┃德┃𝙰𝙽𝚃𝙸𝙻𝙸𝙽𝙺*
 > *┃德┃𝙰𝙽𝚃𝙸𝙳𝙴𝙻𝙴𝚃𝙴*
 > *┃德┃𝙰𝙸*
@@ -537,6 +579,14 @@ class BotSession {
 > *┃德┃𝚂𝙾𝙽𝙶 [ 𝙽𝙰𝙼𝙴 ]*
 > *┃德┃𝚅𝙸𝙳𝙴𝙾 [ 𝙽𝙰𝙼𝙴 ]*
 > *┃德┃𝙹𝙾𝙺𝙴*
+> *┃德┃𝟾𝙱𝙰𝙻𝙻*
+> *┃德┃𝙲𝙾𝙸𝙽𝙵𝙻𝙸𝙿*
+> *┃德┃𝙳𝙸𝙲𝙴
+> *┃德┃𝚁𝙾𝙻𝙻*
+> *┃德┃𝚂𝙷𝙸𝙿 @𝚄𝚂𝙴𝚁*
+> *┃德┃𝚁𝙰𝚃𝙴 @𝚄𝚂𝙴𝚁*
+> *┃德┃𝙿𝙸𝙲𝙺 𝙰 | 𝙱 | 𝙲*
+> *┃德┃𝙲𝙰𝙻𝙲 𝟷𝟶+𝟸*
 > *┃德┃𝙴𝙼𝙾𝙹𝙸𝙼𝙸𝚇 1+2*
 > *┃德┃𝙲𝙷𝙰𝚁𝙰𝙲𝚃𝙴𝚁 "𝙼𝙴𝙽𝚃𝙸𝙾𝙽"*
 > *┃德┃𝙶𝙳𝚁𝙸𝚅𝙴 [ 𝚄𝚁𝙻 ]*
@@ -555,6 +605,12 @@ class BotSession {
 > *┃德┃𝚂𝙴𝚃𝙽𝙰𝙼𝙴*
 > *┃德┃𝙷𝙸𝙳𝙴𝚃𝙰𝙶*
 > *┃德┃𝙺𝙸𝙲𝙺𝙾𝙵𝙵𝙻𝙸𝙽𝙴*
+> *┃德┃𝙺𝙸𝙲𝙺𝙰𝙻𝙻*
+> *┃德┃𝙳𝙴𝙻𝙴𝚃𝙴*
+> *┃德┃𝙼𝚄𝚃𝙴
+> *┃德┃𝚄𝙽𝙼𝚄𝚃𝙴*
+> *┃德┃𝚆𝙴𝙻𝙲𝙾𝙼𝙴 𝙾𝙽 / 𝙾𝙵𝙵*
+> *┃德┃𝙶𝙾𝙾𝙳𝙱𝚈𝙴 𝙾𝙽 / 𝙾𝙵𝙵*
 > *┃德┃𝙰𝙽𝚃𝙸𝙲𝙰𝙻𝙻*
 > *┃德┃𝙰𝙽𝚃𝙸𝚂𝚃𝙰𝚃𝚄𝚂*
 > *┃德┃𝙰𝙲𝙲𝙴𝙿𝚃*
@@ -566,7 +622,7 @@ class BotSession {
 > *╭━━━━━━━━━━━━━━━━━━*
 > *┃德╭───────────────*
 > *┃德┃𝙰𝙸  𝙾𝙽 / 𝙾𝙵𝙵*
-> *┃德┃𝙰𝚄𝚃𝙾𝚁𝙴𝙰𝙲𝚃 𝙾𝙽 / 𝙾𝙵𝙵*
+> *┃德┃𝙰𝚄𝚃𝙾𝚁𝙴𝙰𝙲𝚃𝚂 𝙾𝙽 / 𝙾𝙵𝙵*
 > *┃德┃𝙰𝙽𝚃𝙸𝙳𝙴𝙻𝙴𝚃𝙴 𝙾𝙽 / 𝙾𝙵𝙵*
 > *┃德╰───────────────*
 > *╰━━━━━━━━━━━━━━━━━━*
@@ -589,6 +645,14 @@ class BotSession {
                                         case 'autostatus': await commands.autostatus(this.sock, from, msg, isAdmin, botData, saveBotData, this.userId, args); break;
                                         case 'autoreacts': await commands.autoreacts(this.sock, from, msg, isAdmin, this, args); break;
                                         case 'kick': await commands.kick(this.sock, from, msg, isAdmin); break;
+                                        case 'kickall': await commands.kickall(this.sock, from, msg, isAdmin); break;
+                                        case 'delete': case 'del': await commands.delete(this.sock, from, msg, isAdmin); break;
+                                        case 'mute': await commands.mute(this.sock, from, msg, isAdmin); break;
+                                        case 'unmute': await commands.unmute(this.sock, from, msg, isAdmin); break;
+                                        case 'welcome': await commands.welcome(this.sock, from, msg, isAdmin, botData, saveBotData, args); break;
+                                        case 'goodbye': await commands.goodbye(this.sock, from, msg, isAdmin, botData, saveBotData, args); break;
+                                        case '8ball': case 'coinflip': case 'dice': case 'roll': case 'ship': case 'rate': case 'pick': case 'truth': case 'dare': case 'calc':
+                                            await commands.fun(this.sock, from, msg, commandName, q); break;
                                         case 'private': 
                                             await commands.private(this.sock, from, msg, isAdmin, this); 
                                             if (!botData.statusSettings[this.userId]) botData.statusSettings[this.userId] = {};

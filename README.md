@@ -531,3 +531,42 @@ npm start
 Then open the deployed URL.
 
 > **Security:** keep WhatsApp auth/session files and environment secrets private. Do not commit `auth_info/`, `.env`, or credentials to a public repository.
+
+
+## 🤖 AI Configuration
+
+The `.ai` command requires an AI API key. In Railway, open **Variables** and add:
+
+```env
+OPENAI_API_KEY=YOUR_PRIVATE_KEY
+AI_MODEL=gpt-4o-mini
+AI_BASE_URL=https://api.openai.com/v1
+```
+
+Alternatively, use an OpenAI-compatible provider with `AI_API_KEY`, `AI_BASE_URL`, and `AI_MODEL`. Never commit API keys to GitHub.
+
+## 🛡️ New Group Commands
+
+```text
+.kick       — remove a tagged/replied member
+.kickall    — remove non-admin members
+.delete     — delete a replied message
+.mute       — restrict the group to admins
+.unmute     — allow all members to send
+.welcome on/off
+.goodbye on/off
+```
+
+## 🎮 Fun & Utility Commands
+
+```text
+.8ball
+.coinflip
+.dice / .roll
+.ship @user
+.rate @user
+.pick A | B | C
+.truth
+.dare
+.calc 10+5*2
+```

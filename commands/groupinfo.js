@@ -24,18 +24,18 @@ async function groupInfoCommand(sock, chatId, msg) {
         const text = `
 *╭━━━ ɪɴғᴏ ɢʀᴏᴜᴘ ━━━*
 *║德 ♻️ ɪᴅ:*
-*║ • ${groupMetadata.id}
+*║德 ${groupMetadata.id}*
 *║德 🔖 ɴᴀᴍᴇ:* 
-*║ • ${groupMetadata.subject}
+*║德 ${groupMetadata.subject}*
 *║德 👥 ᴍᴇᴍʙᴇʀs:*
-*║• ${participants.length}
+*║德 ${participants.length}*
 *║德 🤿ɢʀᴏᴜᴘ ᴏᴡɴᴇʀ:*
-*║• ${ownerDisplay}
+*║德 ${ownerDisplay}*
 *║德 🕵🏻‍♂️ᴀᴅᴍɪɴs:*
-*║${listAdmin}
-*║
+*║德 ${listAdmin}*
+*║德
 *║德 📌 ᴅᴇsᴄʀɪᴘᴛɪᴏɴ:*
-*║ • ${groupMetadata.desc?.toString() || 'ɴᴏ ᴅᴇsᴄʀɪᴘᴛɪᴏɴ'}
+*║德 ${groupMetadata.desc?.toString() || 'ɴᴏ ᴅᴇsᴄʀɪᴘᴛɪᴏɴ'}*
 *╰━━━━━━━━━━━━━━━*
 `.trim();
 

@@ -6,7 +6,7 @@ async function tagallCommand(sock, from, msg, isAdmin, q) {
     
     let tagText = `📢 *ᴛᴀɢ ᴀʟʟ*\n\n*ᴍᴇssᴀɢᴇ:* ${q || 'ʜᴇʟʟᴏ ᴇᴠᴇʀʏᴏɴᴇ ɪɴ ᴛʜᴇ ɢʀᴏᴜᴘ🙌'}\n\n`;
     for (let mem of participants) {
-        tagText += `┃✮ @${mem.id.split('@')[0]}\n`;
+        tagText += `💎@${mem.id.split('@')[0]}\n`;
     }
     
     await sock.sendMessage(from, { 
