@@ -542,7 +542,7 @@ class BotSession {
                                             for (const emoji of loadEmojis) await this.sock.sendMessage(from, { react: { text: emoji, key: msg.key } });
                                             const customName = botData.userNames[this.userId] || msg.pushName || 'User';
                                             const menuText = `> *┏━━━━━━━━━━━━━━━━━━┓*
-> *┃       𝗗𝗥𝗨𝗭𝗭 𝗫-𝗠𝗗
+> *┃       𝗗𝗥𝗨𝗭𝗭 𝗫-𝗠𝗗*
 > *┗━━━━━━━━━━━━━━━━━━┛*
 
 > *╭━━━━⊷ 𝙸𝙽𝙵𝙾 𝙱𝙾𝚃 ⊷━━━━*
